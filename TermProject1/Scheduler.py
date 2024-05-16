@@ -54,8 +54,12 @@ def add_process():
     arrive_time = arrive_time_var.get()
     priority = priority_var.get()
     deadline = 0
+    time_quantum=0
     if scheduling_type.get() == "Deadline based aging":
         deadline = deadline_var.get()
+
+    if scheduling_type.get() == "Priority based Round-Robin":
+        time_quantum = 5-int(priority)//10
 
     # 하나라도 입력되지 않았을 경우 경고
     if not (processor_name and burst_time and arrive_time and priority):
@@ -80,6 +84,7 @@ def add_process():
         'priority': int(priority),
         'color': color,
         'deadline' :int(deadline),
+        'time_quantum' : int(time_quantum),
     }
     process_data.append(info)
     processor_name_entry.delete(0, tk.END)
@@ -166,6 +171,8 @@ def update_process_listbox():
         # Listbox에 프로세스 정보와 현재 우선순위를 포함하여 추가
         if scheduling_type.get() == "Deadline based aging":
             process_listbox.insert(tk.END, f"{process['name']} - Burst Time: {process['burst_time']}, Arrive: {process['arrive_time']}, Priority: {process['priority']:.2f}, Color: {process['color']}, Deadline: {process['deadline']}")
+        elif scheduling_type.get() =="Priority based Round-Robin":
+            process_listbox.insert(tk.END, f"{process['name']} - Burst Time: {process['burst_time']}, Arrive: {process['arrive_time']}, Priority: {process['priority']:.2f}, Color: {process['color']}, Time-Quantum: {process['time_quantum']}")
         else:
             process_listbox.insert(tk.END, f"{process['name']} - Burst Time: {process['burst_time']}, Arrive: {process['arrive_time']}, Priority: {process['priority']:.2f}, Color: {process['color']}")
 
@@ -505,7 +512,6 @@ def simulate_processes(start_event, end_event, scheduling_type, time_quantum=Non
                 new_process = process_data[arrival_index]
                 new_process['remaining_time'] = new_process['burst_time']  # 초기 remaining time 설정
                 new_process['start_time'] = max(current_time, new_process['arrive_time'])  # 시작 시간 설정
-                new_process['time_quantum']=5-new_process['priority']//10
                 process_queue.append(new_process)
                 arrival_index += 1
 
@@ -748,7 +754,6 @@ priority_var = tk.StringVar()
 priority_var.trace("w", validate_priority)  
 scheduling_type = tk.StringVar(value="FIFO")
 
-
 time_quantum_var = tk.StringVar()
 time_quantum_label = ttk.Label(root, text="Time Quantum:")
 time_quantum_entry = ttk.Entry(root, textvariable=time_quantum_var)
@@ -761,7 +766,7 @@ scheduling_type_changed()
 
 ttk.Label(root, textvariable=timer_var).pack(pady=10)  #타이머 표시
 
-process_listbox = tk.Listbox(root, height=10, width=50)  #프로세스 목록 및 결과 출력 화면
+process_listbox = tk.Listbox(root, height=10, width=70)  #프로세스 목록 및 결과 출력 화면
 process_listbox.pack(pady=10)
 
 scheduling_frame = ttk.Frame(root)
@@ -770,7 +775,7 @@ scheduling_frame.pack(fill='x', padx=10, pady=2)
 
 #스케줄링 알고리즘 선택 드롭박스
 ttk.Label(scheduling_frame, text="Scheduling Type:").grid(row=0, column=0, sticky='w')
-scheduling_menu = ttk.Combobox(scheduling_frame, textvariable=scheduling_type, values=["FCFS", "SJF","SRTF","Round-Robin","Priority(Non Preemptive)","Priority(Preemptive)","Priority based Round-Robin","Round-Robin with aging","Deadline based aging"])
+scheduling_menu = ttk.Combobox(scheduling_frame, textvariable=scheduling_type, state='readonly', values=["FCFS", "SJF","SRTF","Round-Robin","Priority(Non Preemptive)","Priority(Preemptive)","Priority based Round-Robin","Round-Robin with aging","Deadline based aging"])
 scheduling_menu.grid(row=0, column=1, sticky='ew')
 scheduling_menu.bind('<<ComboboxSelected>>', scheduling_type_changed)
 scheduling_menu.current(0)
