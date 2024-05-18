@@ -729,6 +729,25 @@ def validate_priority(*args):
         messagebox.showerror("잘못된 입력", str(e))
         priority_var.set('')  # 필드 클리어
 
+# 사용 방법 메시지박스 표시 함수 추가
+def show_instructions():
+    instructions = (
+        "Processor Scheduling Simulation 사용 방법:\n\n"
+        "1. Scheduling Type: 스케줄링 유형을 선택하세요.\n"
+        "2. Processor Name: 프로세스 이름을 입력하세요.\n"
+        "3. Burst Time: 프로세스의 실행 시간을 입력하세요.\n"
+        "4. Arrive Time: 프로세스의 도착 시간을 입력하세요.\n"
+        "5. Priority: 프로세스의 우선순위를 입력하세요 (0 ~ 49의 정수).\n"
+        "6. 각 알고리즘에 따라 필요한 추가 정보(deadline)입력창이 생기면 해당 정보를 입력하세요.\n"
+        "7. Add Process: 입력한 정보를 바탕으로 프로세스를 추가하세요.\n"
+        "8. Time quantum: 선택한 스케줄링이 Round-Robin 혹은 Round-Robin with aging이라면 time quantum값을 입력하세요.\n"
+        "9. Start Simulation: 시뮬레이션을 시작합니다.\n"
+        "10. Simulation Result: 시뮬레이션을 결과를 확인합니다.\n"
+        "11. Reset Simulation: 시뮬레이션을 초기화합니다.\n"
+        "12. 스케줄링 알고리즘 설명을 보려면 ? 버튼을 클릭하세요."
+    )
+    messagebox.showinfo("사용 방법", instructions)
+
 def show_scheduling_description():
     scheduling_description = {
         "FCFS": "First-Come, First-Served (FCFS)는 가장 간단한 스케줄링 알고리즘으로, 먼저 도착한 프로세스를 먼저 처리합니다.",
@@ -769,8 +788,15 @@ ttk.Label(root, textvariable=timer_var).pack(pady=10)  #타이머 표시
 process_listbox = tk.Listbox(root, height=10, width=70)  #프로세스 목록 및 결과 출력 화면
 process_listbox.pack(pady=10)
 
+help_button = ttk.Button(root, text="Show Instructions", command=show_instructions)
+help_button.pack(pady=10)
+
 scheduling_frame = ttk.Frame(root)
 scheduling_frame.pack(fill='x', padx=10, pady=2)
+
+
+
+
 
 
 #스케줄링 알고리즘 선택 드롭박스
