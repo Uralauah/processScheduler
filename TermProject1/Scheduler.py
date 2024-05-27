@@ -11,7 +11,7 @@ class GanttChart:
         self.canvas.pack(fill='both', expand=True)
         self.processes = {}
         self.last_end_time = 0
-        self.used_colors = set()
+        
 
     #프로세스 추가
     def add_process(self, name, start_time, duration, priority, color):
@@ -20,21 +20,21 @@ class GanttChart:
         for i in range(duration):
             self.canvas.after(i * 1000, self.draw_process, name, start_time + i, 1, y_position, priority, color)
         self.last_end_time = start_time + duration
-        self.used_colors.add(color)  
+        
 
     #간트차트 그리기 
     def draw_process(self, name, start_time, duration, y, priority, color):
-        x0 = start_time * 20
-        x1 = (start_time + duration) * 20
+        x0 = start_time * 20 + 10
+        x1 = (start_time + duration) * 20 + 10
         self.canvas.create_rectangle(x0, y, x1, y + 30, fill=color, outline="black")
-        self.canvas.create_text(x0 + 5, y + 15, text=f"{name}", anchor="w", fill="white")
+        self.canvas.create_text(x0 + 5, y + 15, text=f"{name}", anchor="w", fill="black")
 
     #리셋
     def clear(self):
         self.canvas.delete("all")
         self.processes = {}
         self.last_end_time = 0
-        self.used_colors.clear()  
+        
 
 process_data = []
 
@@ -44,9 +44,6 @@ gantt_chart = GanttChart(root)
 scheduling_type = tk.StringVar(value="FIFO")
 
 timer_var = tk.StringVar(value="Time elapsed: 0s")
-
-
-
 
 def add_process():
     processor_name = processor_name_var.get()
@@ -69,14 +66,8 @@ def add_process():
         if not deadline:
             messagebox.showwarning("Warning", "해당 알고리즘은 deadline을 입력해야 합니다.")
             return
-    colors = ["red", "green", "blue", "purple", "orange", "pink"]
-    available_colors = [color for color in colors if color not in gantt_chart.used_colors]  #이미 사용된 색상 제외
-    if not available_colors: #사용 가능한 색상이 없다면 색상 집합 초기화
-        gantt_chart.used_colors.clear()
-        available_colors = colors.copy()
 
-    color = random.choice(available_colors) #사용 가능한 색상 중 랜덤 선택
-    gantt_chart.used_colors.add(color)  #사용한 색상 저장
+    color = determine_color(len(process_data) + 1)
     info = { #프로세스 정보 저장
         'name': processor_name,
         'burst_time': int(burst_time),
@@ -98,6 +89,11 @@ def add_process():
     else:
         process_listbox.insert(tk.END, f"{info['name']} - Burst Time: {info['burst_time']}, Arrive: {info['arrive_time']}, Priority: {info['priority']}, Color: {info['color']}")
 
+# 색상 지정 함수
+def determine_color(process_number):
+    colors = ["red", "orange", "yellow", "green", "blue"]
+    return colors[(process_number - 1) % len(colors)]
+
 #프로세스 실행
 def run_process(process, start_event, end_event, start_time, duration):
     start_event.set() #시작 이벤트를 활성화해서 프로세스 시작 신호를 보냄
@@ -114,7 +110,6 @@ def run_process(process, start_event, end_event, start_time, duration):
     end_event.set() #프로세스 끝났음을 알리기 위해 종료 이벤트 설정
     start_event.clear() #다음 프로세스의 시작을 위해 시작 이벤트 초기화
 
-
 #타이머 업데이트
 def update_timer():
     global process_data #프로세스 데이터 저장을 위한 전역 변수
@@ -125,7 +120,6 @@ def update_timer():
         time.sleep(1)  #1초 대기
     final_time = int(time.time() - start_time)  #모든 프로세스가 끝난 후 시간 계산
     timer_var.set(f"Total Time: {final_time} s") #최종 시간 타이머 변수에 설정
-    
 
 #Round-Robin을 선택했을 때 time_quantum 입력을 위한 입력창 보이게 하기
 def scheduling_type_changed(event=None):
@@ -145,7 +139,6 @@ def scheduling_type_changed(event=None):
         deadline_label.pack_forget()  # 데드라인 입력창 숨김
         deadline_entry.pack_forget()  # 데드라인 입력창 숨김
 
-
 #시뮬레이션 시작
 def start_simulation():
     global start_time 
@@ -162,8 +155,6 @@ def start_simulation():
     #타이머 업데이트 스레드 시작
     threading.Thread(target=update_timer).start() 
     refresh_ui()
-    
-    
 
 def update_process_listbox():
     process_listbox.delete(0, tk.END)  # 기존 목록을 삭제
@@ -181,7 +172,6 @@ def refresh_ui():
     if process_data:
         update_process_listbox()  # 프로세스 목록 업데이트
         root.after(1000, refresh_ui)  # 1초 후 다시 호출
-
 
 #최종 결과 계산
 def calculate_metrics(processes):
@@ -211,7 +201,6 @@ def calculate_metrics(processes):
     process_listbox.insert(tk.END, f"Average Waiting Time: {average_waiting_time:.2f}")
     process_listbox.insert(tk.END, f"Average Turnaround Time: {average_turnaround_time:.2f}")
 
-    
 def simulate_processes(start_event, end_event, scheduling_type, time_quantum=None):
     global process_data
     current_time = 0
@@ -226,7 +215,6 @@ def simulate_processes(start_event, end_event, scheduling_type, time_quantum=Non
 
     def run_idle_process(start_time, duration):
         color = 'white'
-        gantt_chart.used_colors.add(color) 
         info = {
             'name': ' ',
             'burst_time': duration,
@@ -700,13 +688,9 @@ def simulate_processes(start_event, end_event, scheduling_type, time_quantum=Non
                 if arrival_index < len(process_data):
                     current_time = process_data[arrival_index]['arrive_time']
 
-    
-
-    
     #프로세스 실행 결과 계산
     calculate_metrics(process_data)
     process_data = []  # 프로세스 데이터 초기화
-
 
 #리셋 함수
 def reset_simulation():
@@ -765,8 +749,6 @@ def show_scheduling_description():
     description = scheduling_description.get(selected_type, "선택한 스케줄링 알고리즘에 대한 설명이 없습니다.")
     messagebox.showinfo("스케줄링 알고리즘 설명", description)
 
-
-
 processor_name_var = tk.StringVar()
 burst_time_var = tk.StringVar()
 arrive_time_var = tk.StringVar()
@@ -794,11 +776,6 @@ help_button.pack(pady=10)
 
 scheduling_frame = ttk.Frame(root)
 scheduling_frame.pack(fill='x', padx=10, pady=2)
-
-
-
-
-
 
 #스케줄링 알고리즘 선택 드롭박스
 ttk.Label(scheduling_frame, text="Scheduling Type:").grid(row=0, column=0, sticky='w')
@@ -843,7 +820,5 @@ arrive_time_entry.pack(fill='x', padx =10, pady= 2)
 ttk.Label(root, text="Priority(0 ~ 49의 정수 입력):").pack(fill='x', padx= 10)
 priority_entry = ttk.Entry(root, textvariable=priority_var)
 priority_entry.pack(fill='x', padx= 10, pady= 2)
-
-
 
 root.mainloop()
