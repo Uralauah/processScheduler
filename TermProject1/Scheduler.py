@@ -729,7 +729,7 @@ def validate_priority(*args):
         messagebox.showerror("잘못된 입력", str(e))
         priority_var.set('')  # 필드 클리어
 
-# 사용 방법 메시지박스 표시 함수 추가
+#사용 방법 설명
 def show_instructions():
     instructions = (
         "Processor Scheduling Simulation 사용 방법:\n\n"
@@ -748,6 +748,7 @@ def show_instructions():
     )
     messagebox.showinfo("사용 방법", instructions)
 
+#각 알고리즘에 대한 설명
 def show_scheduling_description():
     scheduling_description = {
         "FCFS": "First-Come, First-Served (FCFS)는 가장 간단한 스케줄링 알고리즘으로, 먼저 도착한 프로세스를 먼저 처리합니다.",
@@ -788,7 +789,7 @@ ttk.Label(root, textvariable=timer_var).pack(pady=10)  #타이머 표시
 process_listbox = tk.Listbox(root, height=10, width=70)  #프로세스 목록 및 결과 출력 화면
 process_listbox.pack(pady=10)
 
-help_button = ttk.Button(root, text="Show Instructions", command=show_instructions)
+help_button = ttk.Button(root, text="Show Instructions", command=show_instructions) #사용 방법 메시지박스 버튼
 help_button.pack(pady=10)
 
 scheduling_frame = ttk.Frame(root)
