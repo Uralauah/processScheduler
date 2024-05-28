@@ -177,6 +177,7 @@ def refresh_ui():
 def calculate_metrics(processes):
     total_waiting_time = 0
     total_turnaround_time = 0
+    total_response_time = 0  # 응답 시간 총합을 저장할 변수
 
     #GUI에 실행 후 상세 정보 출력
     process_listbox.insert(tk.END, "Process Execution Details:")
@@ -189,18 +190,23 @@ def calculate_metrics(processes):
         waiting_time = turnaround_time - sum(process['execution_times'])
         response_time = process['first_response_time'] - process['arrive_time']
 
-        #모든 프로세스의 waiting time, 더하기
+        #모든 프로세스의 waiting time, turnaround time, response time 더하기
         total_waiting_time += waiting_time
         total_turnaround_time += turnaround_time
+        total_response_time += response_time  # 응답 시간 더하기
+
         #프로세스 별 상세 정보 출력
         process_details = f"Process {process['name']}: Turnaround Time = {turnaround_time}, Waiting Time = {waiting_time}, Response Time = {response_time}"
         process_listbox.insert(tk.END, process_details)
-    #average waiting time, average turnaround time 계산 후 출력
+
+    #average waiting time, average turnaround time, average response time 계산 후 출력
     average_waiting_time = total_waiting_time / len(processes)
-    average_turnaround_time = total_turnaround_time/len(processes)
+    average_turnaround_time = total_turnaround_time / len(processes)
+    average_response_time = total_response_time / len(processes)  # 평균 응답 시간 계산
     process_listbox.insert(tk.END, f"Average Waiting Time: {average_waiting_time:.2f}")
     process_listbox.insert(tk.END, f"Average Turnaround Time: {average_turnaround_time:.2f}")
-
+    process_listbox.insert(tk.END, f"Average Response Time: {average_response_time:.2f}")  # 평균 응답 시간 출력
+    
 def simulate_processes(start_event, end_event, scheduling_type, time_quantum=None):
     global process_data
     current_time = 0
