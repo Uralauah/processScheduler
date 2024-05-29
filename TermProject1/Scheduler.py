@@ -56,7 +56,7 @@ def add_process():
         deadline = deadline_var.get()
 
     if scheduling_type.get() == "Priority based Round-Robin":
-        time_quantum = 5-int(priority)//10
+        time_quantum = 1+int(priority)//10
 
     # 하나라도 입력되지 않았을 경우 경고
     if not (processor_name and burst_time and arrive_time and priority):
@@ -412,7 +412,7 @@ def simulate_processes(start_event, end_event, scheduling_type, time_quantum=Non
 
             if process_queue:
                 # 우선순위가 가장 높은 프로세스 선택
-                process_queue.sort(key=lambda x: x['priority'])
+                process_queue.sort(key=lambda x: -x['priority'])
                 process = process_queue.pop(0)
                 #다음에 들어올 프로세스의 도착시간과 이전 프로세스의 종료시간 사이에 idle한 시간이 존재한다면 빈 간트차트 출력
                 if process['arrive_time']>last_end_time:
@@ -449,7 +449,7 @@ def simulate_processes(start_event, end_event, scheduling_type, time_quantum=Non
                 arrival_index += 1
                 
             if process_queue:
-                process_queue.sort(key=lambda x: x['priority'])
+                process_queue.sort(key=lambda x: -x['priority'])
                 process = process_queue.pop(0)
                 actual_start_time = max(current_time, process['start_time'] if 'start_time' in process else current_time)
                 #다음에 들어올 프로세스의 도착시간과 이전 프로세스의 종료시간 사이에 idle한 시간이 존재한다면 빈 간트차트 출력
@@ -632,27 +632,29 @@ def simulate_processes(start_event, end_event, scheduling_type, time_quantum=Non
         last_end_time = 0
         process_data.sort(key=lambda x: (x['arrive_time'],x['deadline'])) #프로세스들 도착 시간 기준으로 정렬
         for temp_process in process_data:
-            temp_process['priority'] = 1
+            temp_process['priority'] = 0
         while arrival_index < len(process_data) or process_queue:
-            
+        
             #현재 시간 이전에 도착한 모든 프로세스를 큐에 추가
             while arrival_index < len(process_data) and process_data[arrival_index]['arrive_time'] <= current_time:
                 new_process = process_data[arrival_index]
                 new_process['start_time'] = max(current_time, new_process['arrive_time'])  # 시작 시간 설정
-                new_process['deadline']=new_process['deadline']-current_time
-                new_process['priority'] = (new_process['deadline']+new_process['deadline'])/new_process['deadline']
+                new_process['deadline'] = new_process['deadline'] - current_time
                 process_queue.append(new_process)
                 arrival_index += 1
 
             #큐에 존재하는 프로세스들의 우선순위 기준으로 재정렬
-            process_queue.sort(key=lambda x: x['priority'])
+            for process in process_queue:
+                process['priority'] = (current_time - process['arrive_time']) / process['deadline']
+
+            process_queue.sort(key=lambda x: -x['priority'])
 
             if process_queue:
                 process = process_queue.pop(0)
                 actual_start_time = max(current_time, process['start_time'] if 'start_time' in process else current_time)
                 #다음에 들어올 프로세스의 도착시간과 이전 프로세스의 종료시간 사이에 idle한 시간이 존재한다면 빈 간트차트 출력
-                if process['arrive_time']>last_end_time:
-                    run_idle_process(last_end_time,process['arrive_time']-last_end_time)
+                if process['arrive_time'] > last_end_time:
+                    run_idle_process(last_end_time, process['arrive_time'] - last_end_time)
 
                 execution_time = process['burst_time']
                 if process['first_response_time'] is None:
@@ -666,9 +668,8 @@ def simulate_processes(start_event, end_event, scheduling_type, time_quantum=Non
 
                 #aging 계산
                 for temp_process in process_queue:
-                    temp_process['deadline'] = temp_process['deadline']-execution_time
-                    temp_process['priority'] = (temp_process['deadline']+temp_process['burst_time'])/temp_process['burst_time']
-                    
+                    temp_process['deadline'] -= execution_time
+                    temp_process['priority'] = (current_time - temp_process['arrive_time']) / temp_process['deadline']
                     for refresh_process in process_data:
                         if refresh_process['name'] == temp_process['name']:
                             refresh_process['priority'] = temp_process['priority']
@@ -678,25 +679,26 @@ def simulate_processes(start_event, end_event, scheduling_type, time_quantum=Non
                 run_process(process, start_event, end_event, actual_start_time, execution_time)
 
                 #현재 프로세스가 실행되는 동안 도착하는 프로세스들 큐에 넣기
-                while arrival_index < len(process_data) and process_data[arrival_index]['arrive_time'] <= actual_start_time+execution_time:
+                while arrival_index < len(process_data) and process_data[arrival_index]['arrive_time'] <= actual_start_time + execution_time:
                     new_process = process_data[arrival_index]
                     new_process['start_time'] = max(current_time, new_process['arrive_time'])  # 시작 시간 설정
-                    new_process['deadline']=new_process['deadline']-new_process['start_time']
-                    new_process['priority'] = (new_process['deadline']+new_process['burst_time'])/new_process['burst_time']
+                    new_process['deadline'] -= actual_start_time
+                    new_process['priority'] = (current_time - new_process['arrive_time']) / new_process['deadline']
                     process_queue.append(new_process)
                     arrival_index += 1
 
-                # 현재 시간 업데이트
+               # 현재 시간 업데이트
                 current_time = actual_start_time + execution_time
-                
+            
             else:
                 # 큐가 비었다면 다음 프로세스의 도착 시간으로 시간 점프
                 if arrival_index < len(process_data):
                     current_time = process_data[arrival_index]['arrive_time']
 
-    #프로세스 실행 결과 계산
-    calculate_metrics(process_data)
-    process_data = []  # 프로세스 데이터 초기화
+
+        #프로세스 실행 결과 계산
+        calculate_metrics(process_data)
+        process_data = []  # 프로세스 데이터 초기화
 
 #리셋 함수
 def reset_simulation():
@@ -745,11 +747,11 @@ def show_scheduling_description():
         "SJF": "Shortest Job First (SJF)는 실행 시간이 가장 짧은 프로세스를 먼저 실행합니다.",
         "SRTF": "Shortest Remaining Time First (SRTF)는 SJF의 선점형으로 남은 실행 시간이 가장 짧은 프로세스를 우선적으로 실행합니다.",
         "Round-Robin": "라운드 로빈은 각 프로세스에 동일한 시간(타임 퀀텀)만큼 CPU를 할당한 후, 완료되지 않은 프로세스를 대기열 끝으로 이동시킵니다. 해당 알고리즘을 사용하기 위해서는 time quantum을 입력해야 합니다.",
-        "Priority(Non Preemptive)": "우선순위(비선점)는 각 프로세스에 우선순위를 할당하고, 가장 높은 우선순위를 가진 프로세스부터 실행합니다. (Priority(Non Preemptive)의 우선순위는 0에 가까울수록 우선순위가 높습니다.)",
-        "Priority(Preemptive)": "우선순위(선점)는 더 높은 우선순위의 프로세스가 도착하면 현재 실행 중인 프로세스를 중단시키고 새 프로세스를 실행합니다. (Priority(Preemptive)의 우선순위는 0에 가까울수록 우선순위가 높습니다.)",
-        "Priority based Round-Robin": "우선순위 기반 라운드 로빈은 입력받은 0~49의 우선순위에 따라 타임 퀀텀을 조절하여 라운드 로빈 스케줄링을 수행합니다.(Priority based Round-Robin의 우선순위는 0에 가까울수록 우선순위가 높습니다.)",
-        "Round-Robin with aging": "라운드 로빈 에이징은 라운드 로빈을 기반으로 실행 대기 시간에 따라 우선순위를 조정합니다. 해당 알고리즘을 사용하기 위해서는 time quantum을 입력해야 합니다.(Round-Robin with aging의 우선순위는 0에 가까울수록 우선순위가 낮습니다.)",
-        "Deadline based aging": "데드라인 기반 에이징은 각 프로세스의 데드라인을 고려하여 우선순위를 조정하고 스케줄링합니다. 해당 알고리즘을 사용하기 위해서는 각 프로세스의 Deadline을 입력해야 합니다. (우선순위 = (데드라인까지 남은 시간+Cpu Burst)/Cpu Burst) (Deadline based aging의 우선순위는 0에 가까울수록 우선순위가 높습니다.)"
+        "Priority(Non Preemptive)": "우선순위(비선점)는 각 프로세스에 우선순위를 할당하고, 가장 높은 우선순위를 가진 프로세스부터 실행합니다. (Priority(Non Preemptive)의 우선순위는 49에 가까울수록 우선순위가 높습니다.)",
+        "Priority(Preemptive)": "우선순위(선점)는 더 높은 우선순위의 프로세스가 도착하면 현재 실행 중인 프로세스를 중단시키고 새 프로세스를 실행합니다. (Priority(Preemptive)의 우선순위는 49에 가까울수록 우선순위가 높습니다.)",
+        "Priority based Round-Robin": "우선순위 기반 라운드 로빈은 입력받은 0~49의 우선순위에 따라 타임 퀀텀을 조절하여 라운드 로빈 스케줄링을 수행합니다.\n0~9:1\n10~19:2\n20~29:3\n30~39:4\n40~49:5\n(Priority based Round-Robin의 우선순위는 49에 가까울수록 우선순위가 높습니다.)",
+        "Round-Robin with aging": "라운드 로빈 에이징은 라운드 로빈을 기반으로 실행 대기 시간에 따라 우선순위를 조정합니다. 해당 알고리즘을 사용하기 위해서는 time quantum을 입력해야 합니다.(Round-Robin with aging의 우선순위는 49에 가까울수록 우선순위가 높습니다.)",
+        "Deadline based aging": "데드라인 기반 에이징은 각 프로세스의 데드라인을 고려하여 우선순위를 조정하고 스케줄링합니다. 해당 알고리즘을 사용하기 위해서는 각 프로세스의 Deadline을 입력해야 합니다. (우선순위 = 대기시간/데드라인까지 남은 시간) (Deadline based aging의 우선순위는 49에 가까울수록 우선순위가 높습니다.)"
     }
     selected_type = scheduling_type.get()
     description = scheduling_description.get(selected_type, "선택한 스케줄링 알고리즘에 대한 설명이 없습니다.")
