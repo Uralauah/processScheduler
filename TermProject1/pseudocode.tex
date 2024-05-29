@@ -164,7 +164,7 @@
     \EndWhile
     \If{$Q$ is not empty}
         \State $p \gets$ process with highest priority in $Q$
-        \State $time\_quantum \gets$ calculated time quantum based on priority
+        \State $time\_quantum \gets$ 1 + $priority$ // 10
         \State $execution\_time \gets \min(p.remaining\_time, time\_quantum)$
         \State Execute $p$ for $execution\_time$ $\triangleright$ Gantt chart drawing starts here
         \State Update $p.remaining\_time$
@@ -222,7 +222,7 @@
         \State Add processes to $Q$
     \EndWhile
     \For{each process $p$ in $Q$}
-        \State $p.priority \gets \left(\frac{p.burst\_time + (p.deadline - current\_time)}{p.burst\_time}\right)$
+        \State $p.priority \gets \left(\frac{current\_time - p.arrive\_time}{p.deadline}\right)$
     \EndFor
     \If{$Q$ is not empty}
         \State $p \gets$ process with highest priority in $Q$
