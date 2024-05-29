@@ -1,0 +1,239 @@
+\documentclass{article}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\begin{document}
+
+% FCFS Algorithm
+\begin{algorithm}
+\caption{First-Come, First-Served (FCFS)}
+\begin{algorithmic}[1]
+\State Sort processes by arrival time $\triangleright$ Sorted by arrival time
+\State $current\_time \gets 0$
+\While{there are unprocessed processes}
+    \State $p \gets$ next process in sorted processes
+    \State $start\_time \gets \max(current\_time, p.arrival\_time)$
+    \State $end\_time \gets start\_time + p.burst\_time$
+    \State Execute $p$ from $start\_time$ to $end\_time$ $\triangleright$ Gantt chart drawing starts here
+    \State $current\_time \gets end\_time$
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+% SJF Algorithm
+\begin{algorithm}
+\caption{Shortest Job First (SJF)}
+\begin{algorithmic}[1]
+\State Sort processes by arrival time
+\State $current\_time \gets 0$
+\State Initialize an empty priority queue $Q$
+\While{there are unprocessed processes}
+    \While{there are processes that have arrived}
+        \State Add processes to $Q$
+    \EndWhile
+    \If{$Q$ is not empty}
+        \State $p \gets$ process with shortest burst time in $Q$
+        \State $start\_time \gets \max(current\_time, p.arrival\_time)$
+        \State $end\_time \gets start\_time + p.burst\_time$
+        \State Execute $p$ from $start\_time$ to $end\_time$ $\triangleright$ Gantt chart drawing starts here
+        \State $current\_time \gets end\_time$
+    \Else
+        \State $current\_time \gets$ next process arrival time
+    \EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+% SRTF Algorithm
+\begin{algorithm}
+\caption{Shortest Remaining Time First (SRTF)}
+\begin{algorithmic}[1]
+\State Sort processes by arrival time
+\State $current\_time \gets 0$
+\State Initialize an empty priority queue $Q$
+\While{there are unprocessed processes}
+    \While{there are processes that have arrived}
+        \State Add processes to $Q$
+    \EndWhile
+    \If{$Q$ is not empty}
+        \State $p \gets$ process with shortest remaining time in $Q$
+        \State $execution\_time \gets \min(p.remaining\_time, next\_arrival\_time - current\_time)$
+        \State Execute $p$ for $execution\_time$ $\triangleright$ Gantt chart drawing starts here
+        \State Update $p.remaining\_time$
+        \State $current\_time \gets current\_time + execution\_time$
+        \If{$p.remaining\_time == 0$}
+            \State Remove $p$ from $Q$
+        \EndIf
+    \Else
+        \State $current\_time \gets$ next process arrival time
+    \EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+% Round-Robin Algorithm
+\begin{algorithm}
+\caption{Round-Robin (RR)}
+\begin{algorithmic}[1]
+\State Sort processes by arrival time
+\State $current\_time \gets 0$
+\State $time\_quantum \gets$ given time quantum
+\State Initialize a queue $Q$
+\While{there are unprocessed processes or $Q$ is not empty}
+    \While{there are processes that have arrived}
+        \State Add processes to $Q$
+    \EndWhile
+    \If{$Q$ is not empty}
+        \State $p \gets$ process from front of $Q$
+        \State $execution\_time \gets \min(p.remaining\_time, time\_quantum)$
+        \State Execute $p$ for $execution\_time$ $\triangleright$ Gantt chart drawing starts here
+        \State Update $p.remaining\_time$
+        \State $current\_time \gets current\_time + execution\_time$
+        \If{$p.remaining\_time > 0$}
+            \State Add $p$ to back of $Q$
+        \EndIf
+    \Else
+        \State $current\_time \gets$ next process arrival time
+    \EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+% Non-Preemptive Priority Algorithm
+\begin{algorithm}
+\caption{Non-Preemptive Priority Scheduling}
+\begin{algorithmic}[1]
+\State Sort processes by arrival time
+\State $current\_time \gets 0$
+\State Initialize a priority queue $Q$
+\While{there are unprocessed processes or $Q$ is not empty}
+    \While{there are processes that have arrived}
+        \State Add processes to $Q$
+    \EndWhile
+    \If{$Q$ is not empty}
+        \State $p \gets$ process with highest priority in $Q$
+        \State $start\_time \gets \max(current\_time, p.arrival\_time)$
+        \State $end\_time \gets start\_time + p.burst\_time$
+        \State Execute $p$ from $start\_time$ to $end\_time$ $\triangleright$ Gantt chart drawing starts here
+        \State $current\_time \gets end\_time$
+        \State Remove $p$ from $Q$
+    \Else
+        \State $current\_time \gets$ next process arrival time
+    \EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+% Preemptive Priority Algorithm
+\begin{algorithm}
+\caption{Preemptive Priority Scheduling}
+\begin{algorithmic}[1]
+\State Sort processes by arrival time
+\State $current\_time \gets 0$
+\State Initialize a priority queue $Q$
+\While{there are unprocessed processes or $Q$ is not empty}
+    \While{there are processes that have arrived}
+        \State Add processes to $Q$
+    \EndWhile
+    \If{$Q$ is not empty}
+        \State $p \gets$ process with highest priority in $Q$
+        \State $execution\_time \gets \min(p.remaining\_time, next\_arrival\_time - current\_time)$
+        \State Execute $p$ for $execution\_time$ $\triangleright$ Gantt chart drawing starts here
+        \State Update $p.remaining\_time$
+        \State $current\_time \gets current\_time + execution\_time$
+        \If{$p.remaining\_time == 0$}
+            \State Remove $p$ from $Q$
+        \EndIf
+    \Else
+        \State $current\_time \gets$ next process arrival time
+    \EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+% Priority based Round-Robin Algorithm
+\begin{algorithm}
+\caption{Priority Based Round-Robin}
+\begin{algorithmic}[1]
+\State Sort processes by arrival time
+\State $current\_time \gets 0$
+\State Initialize a priority queue $Q$
+\While{there are unprocessed processes or $Q$ is not empty}
+    \While{there are processes that have arrived}
+        \State Add processes to $Q$
+    \EndWhile
+    \If{$Q$ is not empty}
+        \State $p \gets$ process with highest priority in $Q$
+        \State $time\_quantum \gets$ calculated time quantum based on priority
+        \State $execution\_time \gets \min(p.remaining\_time, time\_quantum)$
+        \State Execute $p$ for $execution\_time$ $\triangleright$ Gantt chart drawing starts here
+        \State Update $p.remaining\_time$
+        \State $current\_time \gets current\_time + execution\_time$
+        \If{$p.remaining\_time > 0$}
+            \State Add $p$ to back of $Q$
+        \EndIf
+    \Else
+        \State $current\_time \gets$ next process arrival time
+    \EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+% Round-Robin with Aging Algorithm
+\begin{algorithm}
+\caption{Round-Robin with Aging}
+\begin{algorithmic}[1]
+\State Sort processes by arrival time
+\State $current\_time \gets 0$
+\State Initialize a priority queue $Q$
+\State Initialize aging factor
+\While{there are unprocessed processes or $Q$ is not empty}
+    \While{there are processes that have arrived}
+        \State Add processes to $Q$
+    \EndWhile
+    \For{each process $p$ in $Q$}
+        \State $p.priority \gets \left(\frac{p.burst\_time + (current\_time - p.arrival\_time)}{p.burst\_time}\right)$
+    \EndFor
+    \If{$Q$ is not empty}
+        \State $p \gets$ process with highest priority in $Q$
+        \State $execution\_time \gets \min(p.remaining\_time, time\_quantum)$
+        \State Execute $p$ for $execution\_time$ $\triangleright$ Gantt chart drawing starts here
+        \State Update $p.remaining\_time$
+        \State $current\_time \gets current\_time + execution\_time$
+        \If{$p.remaining\_time > 0$}
+            \State Add $p$ to back of $Q$
+        \EndIf
+    \Else
+        \State $current\_time \gets$ next process arrival time
+    \EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+% Deadline Based Aging Algorithm
+\begin{algorithm}
+\caption{Deadline Based Aging}
+\begin{algorithmic}[1]
+\State Sort processes by arrival time
+\State $current\_time \gets 0$
+\State Initialize a priority queue $Q$
+\While{there are unprocessed processes or $Q$ is not empty}
+    \While{there are processes that have arrived}
+        \State Add processes to $Q$
+    \EndWhile
+    \For{each process $p$ in $Q$}
+        \State $p.priority \gets \left(\frac{p.burst\_time + (p.deadline - current\_time)}{p.burst\_time}\right)$
+    \EndFor
+    \If{$Q$ is not empty}
+        \State $p \gets$ process with highest priority in $Q$
+        \State $execution\_time \gets p.burst\_time$
+        \State Execute $p$ for $execution\_time$ $\triangleright$ Gantt chart drawing starts here
+        \State $current\_time \gets current\_time + execution\_time$
+    \Else
+        \State $current\_time \gets$ next process arrival time
+    \EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+\end{document}
