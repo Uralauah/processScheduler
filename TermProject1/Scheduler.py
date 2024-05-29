@@ -629,12 +629,12 @@ def simulate_processes(start_event, end_event, scheduling_type, time_quantum=Non
     #신규 : 데드라인 기반 에이징
     elif scheduling_type == "Deadline based aging":
         last_end_time = 0
-        process_data.sort(key=lambda x: (x['arrive_time'],x['deadline'])) #프로세스들 도착 시간 기준으로 정렬
+        process_data.sort(key=lambda x: (x['arrive_time'], x['deadline']))  # 프로세스들 도착 시간 기준으로 정렬
         for temp_process in process_data:
             temp_process['priority'] = 0
         while arrival_index < len(process_data) or process_queue:
         
-            #현재 시간 이전에 도착한 모든 프로세스를 큐에 추가
+            # 현재 시간 이전에 도착한 모든 프로세스를 큐에 추가
             while arrival_index < len(process_data) and process_data[arrival_index]['arrive_time'] <= current_time:
                 new_process = process_data[arrival_index]
                 new_process['start_time'] = max(current_time, new_process['arrive_time'])  # 시작 시간 설정
@@ -642,16 +642,18 @@ def simulate_processes(start_event, end_event, scheduling_type, time_quantum=Non
                 process_queue.append(new_process)
                 arrival_index += 1
 
-            #큐에 존재하는 프로세스들의 우선순위 기준으로 재정렬
+            # 큐에 존재하는 프로세스들의 우선순위 기준으로 재정렬
             for process in process_queue:
-                process['priority'] = (current_time - process['arrive_time']) / process['deadline']
+                if process['deadline'] <= 0:
+                    process['priority'] = float('inf')  # 매우 높은 우선순위 설정
+                else:
+                    process['priority'] = (current_time - process['arrive_time']) / max(process['deadline'], 1)
 
-            process_queue.sort(key=lambda x: -x['priority'])
+            process_queue.sort(key=lambda x: x['priority'])
 
             if process_queue:
                 process = process_queue.pop(0)
                 actual_start_time = max(current_time, process['start_time'] if 'start_time' in process else current_time)
-                #다음에 들어올 프로세스의 도착시간과 이전 프로세스의 종료시간 사이에 idle한 시간이 존재한다면 빈 간트차트 출력
                 if process['arrive_time'] > last_end_time:
                     run_idle_process(last_end_time, process['arrive_time'] - last_end_time)
 
@@ -665,28 +667,22 @@ def simulate_processes(start_event, end_event, scheduling_type, time_quantum=Non
                 process['end_times'].append(end_time)
                 last_end_time = end_time
 
-                #aging 계산
+                # 프로세스 실행
+                run_process(process, start_event, end_event, actual_start_time, execution_time)
+
+                # aging 계산
                 for temp_process in process_queue:
                     temp_process['deadline'] -= execution_time
-                    temp_process['priority'] = (current_time - temp_process['arrive_time']) / temp_process['deadline']
+                    if temp_process['deadline'] <= 0:
+                        temp_process['priority'] = float('inf')  # 매우 높은 우선순위 설정
+                    else:
+                        temp_process['priority'] = (current_time - temp_process['arrive_time']) / max(temp_process['deadline'], 1)
                     for refresh_process in process_data:
                         if refresh_process['name'] == temp_process['name']:
                             refresh_process['priority'] = temp_process['priority']
                             break
 
-                # 프로세스 실행
-                run_process(process, start_event, end_event, actual_start_time, execution_time)
-
-                #현재 프로세스가 실행되는 동안 도착하는 프로세스들 큐에 넣기
-                while arrival_index < len(process_data) and process_data[arrival_index]['arrive_time'] <= actual_start_time + execution_time:
-                    new_process = process_data[arrival_index]
-                    new_process['start_time'] = max(current_time, new_process['arrive_time'])  # 시작 시간 설정
-                    new_process['deadline'] -= actual_start_time
-                    new_process['priority'] = (current_time - new_process['arrive_time']) / new_process['deadline']
-                    process_queue.append(new_process)
-                    arrival_index += 1
-
-               # 현재 시간 업데이트
+                # 현재 시간 업데이트
                 current_time = actual_start_time + execution_time
             
             else:
@@ -694,10 +690,10 @@ def simulate_processes(start_event, end_event, scheduling_type, time_quantum=Non
                 if arrival_index < len(process_data):
                     current_time = process_data[arrival_index]['arrive_time']
 
-
-        #프로세스 실행 결과 계산
+        # 프로세스 실행 결과 계산
         calculate_metrics(process_data)
         process_data = []  # 프로세스 데이터 초기화
+
 
 #리셋 함수
 def reset_simulation():
